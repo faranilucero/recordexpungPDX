@@ -104,6 +104,27 @@ class TestChargeClass(unittest.TestCase):
 
         assert mrc_charge != second_mrc_charge
 
+    def test_case_closed_when_all_charges_convicted_dismissed(self):
+        case = CaseFactory.create()
+        convicted_charge = replace(
+            ChargeFactory.create(case_number=case.summary.case_number), disposition=DispositionCreator.create(date=self.LESS_THAN_TEN_YEARS_AGO, ruling="Convicted")
+        )
+        dismissed_charge = replace(
+            ChargeFactory.create(case_number=case.summary.case_number), disposition=DispositionCreator.create(date=self.LESS_THAN_TEN_YEARS_AGO, ruling="Dismissed")
+        )
+
+        assert case._closed([convicted_charge, dismissed_charge]) is True
+
+    def test_case_closed_when_not_all_charges_convicted_dismissed(self):
+        case = CaseFactory.create()
+        convicted_charge = replace(
+            ChargeFactory.create(case_number=case.summary.case_number), disposition=DispositionCreator.create(date=self.LESS_THAN_TEN_YEARS_AGO, ruling="Convicted")
+        )
+        diverted_charge = replace(
+            ChargeFactory.create(case_number=case.summary.case_number), disposition=DispositionCreator.create(date=self.LESS_THAN_TEN_YEARS_AGO, ruling="Diverted")
+        )
+
+        assert case._closed([convicted_charge, diverted_charge]) is False
 
 # TODO: Clean up testing of private methods
 class TestChargeStatuteSectionAssignment(unittest.TestCase):

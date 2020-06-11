@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime
 from expungeservice.util import DateWithFuture as date_class
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, List
 
 from expungeservice.models.charge import OeciCharge, Charge
+from expungeservice.models.disposition import DispositionStatus
 
 
 @dataclass(frozen=True)
@@ -44,6 +45,17 @@ class OeciCase:
 class Case(OeciCase):
     summary: CaseSummary
     charges: Tuple[Charge, ...]
+
+    @staticmethod
+    def _closed(charges: List[Charge]):
+        CONVICTED_DISMISSED_LIST = [DispositionStatus.CONVICTED, DispositionStatus.DISMISSED]
+        all_convicted_or_dismissed = True
+        for charge in charges:
+            if not charge.disposition.status in CONVICTED_DISMISSED_LIST:
+                all_convicted_or_dismissed = False
+                break
+
+        return all_convicted_or_dismissed
 
 
 class CaseCreator:
